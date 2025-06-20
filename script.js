@@ -1,44 +1,13 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('chat-form');
-  form.addEventListener('submit', fetchResults);
-});
-
-async function fetchResults(event) {
-  event.preventDefault();
-
-  const input = document.getElementById('text-input');
-  const userText = input.value.trim();
-  if (!userText) return;
-
-  appendMessage(userText, 'user');
-  input.value = '';
-  updateChatWindow();
-
-  await fetchApiResponse(userText);
-}
+const PROXY_URL = 'https://script.google.com/macros/s/AKfycbz6_Xxyge1sDu1412GGjjd44WiC47L-QK20pZd8zV8dciE8Ymi9nx6-gN-9bnxKcvidhw/exec';
 
 async function fetchApiResponse(userText) {
-  const apiKey = 'AIzaSyDq385Di-mFHHwWZjgXVnxqpiRwSW9-FGs';
-
-  // Gemini API Endpoint
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-  // Request body format for Gemini API
-  const body = {
-    contents: [
-      {
-        parts: [{ text: userText }]
-      }
-    ]
-  };
-
   try {
-    const response = await fetch(url, {
+    const response = await fetch(PROXY_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify({ text: userText })
     });
 
     if (!response.ok) {
@@ -46,7 +15,7 @@ async function fetchApiResponse(userText) {
     }
 
     const data = await response.json();
-    console.log('API response:', data);
+    console.log('Proxy API response:', data);
 
     // Extract AI reply from data
     let aiReply = "Sorry, I couldn't get a response.";
@@ -69,29 +38,9 @@ async function fetchApiResponse(userText) {
 
     appendMessage(formatResponse(aiReply), 'bot');
   } catch (error) {
-    console.error('API call failed:', error);
+    console.error('Proxy call failed:', error);
     appendMessage('Sorry, something went wrong.', 'bot');
   }
 
   updateChatWindow();
-}
-
-function appendMessage(message, sender) {
-  const chatWindow = document.getElementById('chat-window');
-  const messageDiv = document.createElement('div');
-  messageDiv.classList.add('chat-message', sender);
-  messageDiv.innerHTML = `<p>${message}</p>`;
-  chatWindow.appendChild(messageDiv);
-}
-
-function updateChatWindow() {
-  const chatWindow = document.getElementById('chat-window');
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-}
-
-function formatResponse(text) {
-  return text
-    .trim()
-    .replace(/\n/g, '<br/>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
 }
